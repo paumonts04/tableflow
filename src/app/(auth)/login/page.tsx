@@ -2,7 +2,6 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
 
 export default function LoginPage() {
@@ -34,8 +33,8 @@ export default function LoginPage() {
     <div className="min-h-screen flex items-center justify-center bg-background">
       <div className="w-full max-w-sm space-y-6 p-8">
         <div className="space-y-1">
-          <h1 className="text-2xl font-semibold tracking-tight">Iniciar sesión</h1>
-          <p className="text-sm text-muted-foreground">Accede a tu panel de TableFlow</p>
+          <h1 className="text-2xl font-semibold tracking-tight">Acceso admin</h1>
+          <p className="text-sm text-muted-foreground">Panel de gestión de TableFlow</p>
         </div>
 
         <form onSubmit={handleLogin} className="space-y-4">
@@ -73,13 +72,6 @@ export default function LoginPage() {
             {loading ? 'Entrando...' : 'Entrar'}
           </button>
         </form>
-
-        <p className="text-sm text-center text-muted-foreground">
-          ¿No tienes cuenta?{' '}
-          <Link href="/registro" className="text-foreground underline underline-offset-4">
-            Regístrate
-          </Link>
-        </p>
       </div>
     </div>
   )

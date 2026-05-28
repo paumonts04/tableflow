@@ -1,7 +1,6 @@
 'use client'
 
 import { useState } from 'react'
-import { createClient } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
 import { format } from 'date-fns'
 import { es } from 'date-fns/locale'
@@ -36,13 +35,7 @@ const STATUS_LABELS: Record<string, string> = {
 
 export default function ReservasClient({ reservas }: { reservas: Reserva[] }) {
   const router = useRouter()
-  const supabase = createClient()
   const [filter, setFilter] = useState('all')
-
-  async function handleStatus(id: string, status: string) {
-    await supabase.from('reservations').update({ status }).eq('id', id)
-    router.refresh()
-  }
 
   const filtered = filter === 'all'
     ? reservas
@@ -56,7 +49,7 @@ export default function ReservasClient({ reservas }: { reservas: Reserva[] }) {
       </div>
 
       {/* Filtros */}
-      <div className="flex gap-2">
+      <div className="flex gap-2 flex-wrap">
         {['all', 'pending', 'confirmed', 'cancelled', 'completed'].map(status => (
           <button
             key={status}
@@ -82,19 +75,22 @@ export default function ReservasClient({ reservas }: { reservas: Reserva[] }) {
               <th className="text-left px-4 py-3 font-medium text-muted-foreground">Mesa</th>
               <th className="text-left px-4 py-3 font-medium text-muted-foreground">Personas</th>
               <th className="text-left px-4 py-3 font-medium text-muted-foreground">Estado</th>
-              <th className="text-left px-4 py-3 font-medium text-muted-foreground">Acciones</th>
             </tr>
           </thead>
           <tbody>
             {filtered.length === 0 && (
               <tr>
-                <td colSpan={7} className="px-4 py-8 text-center text-muted-foreground">
+                <td colSpan={6} className="px-4 py-8 text-center text-muted-foreground">
                   No hay reservas
                 </td>
               </tr>
             )}
             {filtered.map(reserva => (
-              <tr key={reserva.id} className="border-b border-border last:border-0 hover:bg-muted/30 transition-colors">
+              <tr
+                key={reserva.id}
+                onClick={() => router.push(`/admin/reservas/${reserva.id}`)}
+                className="border-b border-border last:border-0 hover:bg-muted/30 transition-colors cursor-pointer"
+              >
                 <td className="px-4 py-3">
                   <p className="font-medium">{reserva.guest_name}</p>
                   <p className="text-xs text-muted-foreground">{reserva.guest_email}</p>
@@ -115,18 +111,6 @@ export default function ReservasClient({ reservas }: { reservas: Reserva[] }) {
                   <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${STATUS_STYLES[reserva.status]}`}>
                     {STATUS_LABELS[reserva.status]}
                   </span>
-                </td>
-                <td className="px-4 py-3">
-                  <select
-                    value={reserva.status}
-                    onChange={e => handleStatus(reserva.id, e.target.value)}
-                    className="text-xs border border-input rounded-md px-2 py-1 bg-background outline-none"
-                  >
-                    <option value="pending">Pendiente</option>
-                    <option value="confirmed">Confirmar</option>
-                    <option value="cancelled">Cancelar</option>
-                    <option value="completed">Completada</option>
-                  </select>
                 </td>
               </tr>
             ))}

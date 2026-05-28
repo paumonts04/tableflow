@@ -3,12 +3,38 @@ import { sendConfirmacionCliente, sendAvisoAdmin } from '@/lib/resend/emails'
 import { NextResponse } from 'next/server'
 import { format } from 'date-fns'
 import { es } from 'date-fns/locale'
+import { z } from 'zod'
+
+const reservaSchema = z.object({
+  table_id: z.string().uuid(),
+  service_id: z.string().uuid(),
+  date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+  party_size: z.number().int().min(1).max(20),
+  guest_name: z.string().min(2).max(100),
+  guest_email: z.string().email(),
+  guest_phone: z.string().optional().nullable(),
+  notes: z.string().max(500).optional().nullable(),
+})
 
 export async function POST(request: Request) {
   const supabase = await createClient()
-  const body = await request.json()
+
+  // Validar datos de entrada
+  let body
+  try {
+    const raw = await request.json()
+    body = reservaSchema.parse(raw)
+  } catch {
+    return NextResponse.json({ error: 'Datos inválidos.' }, { status: 400 })
+  }
 
   const { table_id, service_id, date, party_size, guest_name, guest_email, guest_phone, notes } = body
+
+  // Comprobar que la fecha no es pasada
+  const today = format(new Date(), 'yyyy-MM-dd')
+  if (date <= today) {
+    return NextResponse.json({ error: 'La fecha debe ser futura.' }, { status: 400 })
+  }
 
   // Comprobar disponibilidad
   const { data: existente } = await supabase
@@ -27,7 +53,7 @@ export async function POST(request: Request) {
     )
   }
 
-  // Guardar reserva en Supabase
+  // Guardar reserva
   const { data: reserva, error } = await supabase
     .from('reservations')
     .insert({
@@ -41,7 +67,7 @@ export async function POST(request: Request) {
       guest_phone,
       notes,
     })
-    .select(`*, tables(name), services(name)`)
+    .select('*, tables(name), services(name)')
     .single()
 
   if (error) {
