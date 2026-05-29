@@ -1,4 +1,4 @@
-import { createClient } from '@/lib/supabase/server'
+import { createClient, createAdminClient } from '@/lib/supabase/server'
 import { sendConfirmacionCliente, sendAvisoAdmin } from '@/lib/resend/emails'
 import { NextResponse } from 'next/server'
 import { format } from 'date-fns'
@@ -17,8 +17,6 @@ const reservaSchema = z.object({
 })
 
 export async function POST(request: Request) {
-  const supabase = await createClient()
-
   // Validar datos de entrada
   let body
   try {
@@ -35,6 +33,8 @@ export async function POST(request: Request) {
   if (date <= today) {
     return NextResponse.json({ error: 'La fecha debe ser futura.' }, { status: 400 })
   }
+
+  const supabase = createAdminClient()
 
   // Comprobar disponibilidad
   const { data: existente } = await supabase
